@@ -1,0 +1,23 @@
+{
+  "name": "tp06-front",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ci": "vitest run"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^16.0.0",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.8",
+    "@vitejs/plugin-react": "^4.3.3",
+    "vitest": "^2.1.1",
+    "vitest-junit-reporter": "^0.6.0",
+    "whatwg-fetch": "^3.6.20"
+  }
+}

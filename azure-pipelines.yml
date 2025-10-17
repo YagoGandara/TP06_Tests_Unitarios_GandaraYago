@@ -1,0 +1,46 @@
+trigger:
+- main
+pr:
+- main
+
+stages:
+- stage: Tests
+  displayName: Run Unit Tests
+  jobs:
+  - job: backend_tests
+    displayName: Backend (pytest)
+    pool: { vmImage: 'ubuntu-latest' }
+    steps:
+    - task: UsePythonVersion@0
+      inputs: { versionSpec: '3.11' }
+    - script: |
+        python -m pip install -r backend/requirements.txt
+        pytest -q backend/tests           --cov=backend/app --cov-report=xml:backend/coverage.xml           --junitxml=backend/test-results/pytest-results.xml
+      displayName: Run pytest
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'backend/test-results/pytest-results.xml'
+        failTaskOnFailedTests: true
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: 'backend/coverage.xml'
+  - job: frontend_tests
+    displayName: Frontend (Vitest)
+    pool: { vmImage: 'ubuntu-latest' }
+    steps:
+    - script: |
+        cd front
+        npm ci
+        npm run test:ci
+      displayName: Run vitest
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: 'front/test-results/test-results.xml'
+        failTaskOnFailedTests: true
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: 'front/coverage/cobertura-coverage.xml'
