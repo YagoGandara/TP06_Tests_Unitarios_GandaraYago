@@ -13,7 +13,8 @@ async def test_create_get_list_update_delete(client):
     r = await client.get("/todos")
     assert any(x["id"] == tid for x in r.json())
 
-    r = await client.put(f"/todos/{tid}", json={"title": "nuevo"})
+    current = (await client.get(f"/todos/{tid}")).json()
+    r = await client.patch(f"/todos/{tid}", json={"title": "nuevo", "version": current["version"]})
     assert r.status_code == 200
     assert r.json()["title"] == "nuevo"
 

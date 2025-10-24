@@ -49,7 +49,6 @@ async def patch_todo(todo_id: int, changes: TodoUpdate, repo: TodoRepo = Depends
     try:
         item = await repo.update(todo_id, changes.model_dump())
     except ValueError as e:
-        # 409 si es conflicto de versión; 400 para otras violaciones
         raise HTTPException(status_code=409 if "version" in str(e) else 400, detail=str(e))
     if not item:
         raise HTTPException(status_code=404, detail="not found")

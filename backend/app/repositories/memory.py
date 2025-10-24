@@ -57,25 +57,20 @@ class InMemoryTodoRepo:
         current = self._data.get(todo_id)
         if not current:
             return None
-        # optimistic concurrency
         expected_version = changes.pop("version", None)
         if expected_version is None or expected_version != current["version"]:
             raise ValueError("version conflict")
-        # title
         if "title" in changes and changes["title"] is not None:
             title = changes["title"].strip()
             self._ensure_title_unique(title, skip_id=todo_id)
             current["title"] = title
-        # priority + due rules
         if "priority" in changes and changes["priority"] is not None:
             pr = int(changes["priority"])
             if pr == 3 and not (changes.get("due_date") or current.get("due_date")):
                 raise ValueError("high priority items must have a due_date")
             current["priority"] = pr
-        # due_date
         if "due_date" in changes:
             current["due_date"] = changes["due_date"]
-        # status transitions
         if "status" in changes and changes["status"] is not None:
             st = changes["status"]
             allowed = {

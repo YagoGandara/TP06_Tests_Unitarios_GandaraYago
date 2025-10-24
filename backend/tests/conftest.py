@@ -1,8 +1,14 @@
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from app.main import app
+
+# Forzamos que pytest-anyio use asyncio (y no parametrice trio)
+@pytest.fixture
+def anyio_backend():
+    return "asyncio"
 
 @pytest.fixture
 async def client():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
