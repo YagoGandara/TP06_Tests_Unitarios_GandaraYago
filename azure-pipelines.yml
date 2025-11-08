@@ -1,46 +1,153 @@
+# azure-pipelines.yml
+# TP06 – Back (PyTest) + Front (Vitest) en Windows, sin "activate" del venv
+
 trigger:
-- main
+  branches:
+    include:
+      - main
+      - master
+
 pr:
-- main
+  branches:
+    include:
+      - "*"
+
+variables:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20.x'
+  PIP_CACHE_DIR: '$(Pipeline.Workspace)\.pip'
+  NPM_CACHE_DIR: '$(Pipeline.Workspace)\.npm'
 
 stages:
-- stage: Tests
-  displayName: Run Unit Tests
+- stage: tests
+  displayName: Run Unit Tests (Windows)
   jobs:
+
+  # =========================
+  # Backend (Python / PyTest)
+  # =========================
   - job: backend_tests
-    displayName: Backend (pytest)
-    pool: { vmImage: 'ubuntu-latest' }
+    displayName: Backend - PyTest (Windows)
+    pool:
+      vmImage: 'windows-latest'
+
     steps:
-    - task: UsePythonVersion@0
-      inputs: { versionSpec: '3.11' }
-    - script: |
-        python -m pip install -r backend/requirements.txt
-        pytest -q backend/tests           --cov=backend/app --cov-report=xml:backend/coverage.xml           --junitxml=backend/test-results/pytest-results.xml
-      displayName: Run pytest
-    - task: PublishTestResults@2
-      inputs:
-        testResultsFormat: 'JUnit'
-        testResultsFiles: 'backend/test-results/pytest-results.xml'
-        failTaskOnFailedTests: true
-    - task: PublishCodeCoverageResults@1
-      inputs:
-        codeCoverageTool: 'Cobertura'
-        summaryFileLocation: 'backend/coverage.xml'
+      - checkout: self
+        fetchDepth: 0
+
+      # Cache pip basado en requirements.txt
+      - task: Cache@2
+        displayName: Cache pip
+        inputs:
+          key: 'pip | "$(Agent.OS)" | backend/requirements.txt'
+          restoreKeys: |
+            pip | "$(Agent.OS)"
+          path: $(PIP_CACHE_DIR)
+
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '$(PYTHON_VERSION)'
+        displayName: 'Use Python $(PYTHON_VERSION)'
+
+      - powershell: |
+          python -m venv .venv
+          .\.venv\Scripts\python.exe -m pip install --upgrade pip
+          .\.venv\Scripts\python.exe -m pip config set global.cache-dir "$(PIP_CACHE_DIR)"
+          .\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+        displayName: Install backend deps
+
+      - powershell: |
+          New-Item -ItemType Directory -Force -Path backend\test-results | Out-Null
+          .\.venv\Scripts\python.exe -m pytest backend\tests `
+            --cov=backend/app `
+            --cov-report=term-missing `
+            --cov-report=xml:backend/coverage.xml `
+            --junitxml=backend/test-results/pytest-results.xml `
+            --cov-fail-under=80
+        displayName: Run PyTest (coverage + junit)
+
+      - task: PublishTestResults@2
+        displayName: Publish JUnit (backend)
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: 'backend/test-results/pytest-results.xml'
+          searchFolder: '$(Build.SourcesDirectory)'
+          testRunTitle: 'PyTest Backend'
+          failTaskOnFailedTests: true
+
+      - task: PublishCodeCoverageResults@2
+        displayName: Publish coverage (backend)
+        inputs:
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: 'backend/coverage.xml'
+          reportDirectory: 'backend'
+          failIfCoverageEmpty: true
+
+      - task: PublishBuildArtifacts@1
+        displayName: Upload test artifacts (backend)
+        inputs:
+          PathtoPublish: 'backend'
+          ArtifactName: 'backend-artifacts'
+          publishLocation: 'Container'
+
+  # ==========================
+  # Frontend (Node / Vitest)
+  # ==========================
   - job: frontend_tests
-    displayName: Frontend (Vitest)
-    pool: { vmImage: 'ubuntu-latest' }
+    displayName: Frontend - Vitest (Windows)
+    pool:
+      vmImage: 'windows-latest'
+    dependsOn: backend_tests
+
     steps:
-    - script: |
-        cd front
-        npm ci
-        npm run test:ci
-      displayName: Run vitest
-    - task: PublishTestResults@2
-      inputs:
-        testResultsFormat: 'JUnit'
-        testResultsFiles: 'front/test-results/test-results.xml'
-        failTaskOnFailedTests: true
-    - task: PublishCodeCoverageResults@1
-      inputs:
-        codeCoverageTool: 'Cobertura'
-        summaryFileLocation: 'front/coverage/cobertura-coverage.xml'
+      - checkout: self
+        fetchDepth: 0
+
+      # Cache npm basado en package-lock.json
+      - task: Cache@2
+        displayName: Cache npm
+        inputs:
+          key: 'npm | "$(Agent.OS)" | front/package-lock.json'
+          restoreKeys: |
+            npm | "$(Agent.OS)"
+          path: $(NPM_CACHE_DIR)
+
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '$(NODE_VERSION)'
+        displayName: 'Use Node $(NODE_VERSION)'
+
+      - powershell: |
+          npm config set cache "$(NPM_CACHE_DIR)" --global
+          cd front
+          npm ci
+        displayName: Install frontend deps
+
+      - powershell: |
+          cd front
+          npm run test:ci
+        displayName: Run Vitest (coverage + junit)
+
+      - task: PublishTestResults@2
+        displayName: Publish JUnit (frontend)
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: 'front/test-results/test-results.xml'
+          searchFolder: '$(Build.SourcesDirectory)'
+          testRunTitle: 'Vitest Frontend'
+          failTaskOnFailedTests: true
+
+      - task: PublishCodeCoverageResults@2
+        displayName: Publish coverage (frontend)
+        inputs:
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: 'front/coverage/cobertura-coverage.xml'
+          reportDirectory: 'front/coverage'
+          failIfCoverageEmpty: true
+
+      - task: PublishBuildArtifacts@1
+        displayName: Upload test artifacts (frontend)
+        inputs:
+          PathtoPublish: 'front'
+          ArtifactName: 'frontend-artifacts'
+          publishLocation: 'Container'
