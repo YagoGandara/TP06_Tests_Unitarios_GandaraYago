@@ -6,7 +6,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./setupTests.ts'],
-    reporters: ['default', ['vitest-junit-reporter', { outputFile: './test-results/test-results.xml' }]],
+    reporters: ['default', ['junit', { outputFile: './test-results/test-results.xml' }]],
     coverage: { reporter: ['text', 'lcov', 'cobertura'], lines: 80, functions: 80, branches: 70 }
   }
 })

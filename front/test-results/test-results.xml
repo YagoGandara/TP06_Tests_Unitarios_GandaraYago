@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="11" failures="0" errors="0" time="2.33">
+    <testsuite name="src/__tests__/App.test.tsx" timestamp="2025-11-08T18:56:05.368Z" hostname="BOOK-HCOSVE83RC" tests="1" failures="0" errors="0" skipped="0" time="0.0385839">
+        <testcase classname="src/__tests__/App.test.tsx" name="renderiza el título" time="0.0376201">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/services.api.test.ts" timestamp="2025-11-08T18:56:05.371Z" hostname="BOOK-HCOSVE83RC" tests="5" failures="0" errors="0" skipped="0" time="0.013453">
+        <testcase classname="src/__tests__/services.api.test.ts" name="GET /todos with params" time="0.0075355">
+        </testcase>
+        <testcase classname="src/__tests__/services.api.test.ts" name="POST /todos create" time="0.0007049">
+        </testcase>
+        <testcase classname="src/__tests__/services.api.test.ts" name="PATCH /todos update" time="0.001434">
+        </testcase>
+        <testcase classname="src/__tests__/services.api.test.ts" name="POST /todos/{id}/toggle" time="0.0006214">
+        </testcase>
+        <testcase classname="src/__tests__/services.api.test.ts" name="request lanza si la respuesta no es ok (p.ej. 500)" time="0.0019219">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/__tests__/TodoList.test.tsx" timestamp="2025-11-08T18:56:05.373Z" hostname="BOOK-HCOSVE83RC" tests="5" failures="0" errors="0" skipped="0" time="0.3341315">
+        <testcase classname="src/__tests__/TodoList.test.tsx" name="adds and toggles items" time="0.0808695">
+        </testcase>
+        <testcase classname="src/__tests__/TodoList.test.tsx" name="handles fetch error on load" time="0.1608483">
+        </testcase>
+        <testcase classname="src/__tests__/TodoList.test.tsx" name="muestra error si falla crear (POST /todos 400)" time="0.0476759">
+        </testcase>
+        <testcase classname="src/__tests__/TodoList.test.tsx" name="no muestra botón Done cuando el item ya está done" time="0.0071831">
+        </testcase>
+        <testcase classname="src/__tests__/TodoList.test.tsx" name="muestra error si falla el toggle (POST /todos/{id}/toggle 400)" time="0.0363886">
+        </testcase>
+    </testsuite>
+</testsuites>
