@@ -36,3 +36,13 @@ El **motivo** de esto fue aumentar la compliejidad de una aplicación antes simp
 - Pipeline en Azure con dos jobs: **backend** y **frontend**.
 - Publicación de **JUnit** y **Cobertura**.
 - Corte por cobertura baja.
+
+##Estrategias de Mocking
+
+1) **Backend**
+    Las pruebas se hacen con `pytest` sobre FastAPI, usando `httpx.ASGITransport` (no levanta el server real). La base de datos fue reemplazada por repostorios en memoria (aisla la persistencia). Adicionalmente, se prueban rutas, reglas de negocio, errores y concurrencia
+2) **Frontend**: 
+    `vitest` + `@testing-library/react`. `fetch` mockeado con `vi.fn()` aisla la red. Ademas se cubren "caminos felices" y fallos (500 Y 400), y la UI condicional (que no haya un botó "Done" si el estado no es `done`)
+3) **Patrón AAA**
+    Se realizón un Arrange (mocks y datos), un Act (llamda y acción), y un Assert (expect)
+Adicionalmente, fue tuilizado Jest/Vitest porque es compatible con JEST (`expect/vi`, reporter JUnit nativo), para cumplir con la consigna de Jest en JS/TS
